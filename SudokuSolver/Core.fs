@@ -1,11 +1,8 @@
 ﻿module SudokuSolver
 
-open System
-open NUnit.Framework
-
 type Grid = Map<(int*int),int option>
 
-let grid = 
+let grid =
     [
         [ None;   None;    Some 6;None;   None;   Some 4; None;   Some 8; Some 1 ]
         [ None;   Some 8;  None;  None;   None;   Some 5; Some 2; None;   None   ]
@@ -15,7 +12,7 @@ let grid =
         [ None;   None;    None;  None;   None;   None;   None;   Some 7; Some 4 ]
         [ None;   None;    Some 5;None;   None;   Some 2; Some 7; None;   None   ]
         [ None;   None;    Some 1;Some 9; None;   None;   None;   Some 2; None   ]
-        [ Some 2; Some 7;  None;  Some 6; None;   None;   Some 3; None;   None   ]  
+        [ Some 2; Some 7;  None;  Some 6; None;   None;   Some 3; None;   None   ]
     ]
 
 let getCoordinates grid =
@@ -42,7 +39,7 @@ let getPopulated (grid:Grid) =
         | Some _ -> (unpop, cell::pop)
     ) ([],[])
 
-let allCoordinates = 
+let allCoordinates =
     [for y in [0..8] do
         for x in [0..8] do
             yield (x,y)]
@@ -55,12 +52,12 @@ let isComplete (grid:Grid) =
 let range = Set [1..9]
 let onlyPossibleNumber eliminated =
     eliminated 
-    |> Set.difference range 
-    |> Set.toList 
+    |> Set.difference range
+    |> Set.toList
     |> List.head
 
 let reduceGrid (grid:Grid) reducer =
-    Seq.unfold(fun (curr, prev) -> 
+    Seq.unfold(fun (curr, prev) ->
         if curr = prev then None
         else 
             let reduced = grid |> reducer
@@ -68,17 +65,27 @@ let reduceGrid (grid:Grid) reducer =
     ) (grid, emptyGrid)
     |> Seq.last
 
+let nineGrids =
+    [for x in 0..3..8 do
+        for y in 0..3..8 do
+            yield (x,y)]
+    |> List.map(fun (x,y) ->
+        [for x' in x..x+2 do
+            for y' in y..y+2 do
+                yield (x',y')]
+    )
+
 let sweep (grid:Grid) =
     let (unpop, _) = getPopulated grid
 
-    let eliminatedNumbers =
+    let crossEliminatedNumbers =
         unpop
         |> List.map(fun ((x,y),_) ->
             let cross = 
                 let eightContiguousCells cellPosition = [0..8] |> List.map cellPosition
                 let xs = eightContiguousCells (fun x' -> (x',y))
                 let ys = eightContiguousCells (fun y' -> (x,y'))
-                xs |> List.append ys                    
+                xs |> List.append ys
                 |> List.filter(fun p -> p <> (x,y))
 
             cross
@@ -93,9 +100,18 @@ let sweep (grid:Grid) =
             | None -> acc |> Map.add position (value |> Set.singleton)
         ) Map.empty
 
-    eliminatedNumbers
+    let gridEliminatedNumbers =
+        nineGrids
+        |> List.map(fun g ->
+            g
+            |> List.map (fun k -> 
+                grid |> Map.find k
+            )
+        )
+
+    crossEliminatedNumbers
     |> Map.filter(fun k v -> v.Count = 8)
     |> Map.fold(fun acc k v ->
-        acc 
+        acc
         |> Map.add k (Some(v |> onlyPossibleNumber))
     ) grid
