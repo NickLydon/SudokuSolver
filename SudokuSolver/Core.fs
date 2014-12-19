@@ -1,5 +1,17 @@
 ﻿module SudokuSolver
 
+module Map =
+
+    let union map1 combine map2 =
+        map1 
+        |> Map.fold (fun acc k v ->
+            let newVal = 
+                match (acc |> Map.tryFind k) with
+                | None -> v
+                | Some v' -> combine v v'
+            acc |> Map.add k newVal
+        ) map2
+
 type Grid = Map<(int*int),int option>
 
 let grid =
@@ -48,7 +60,6 @@ let isComplete (grid:Grid) =
     grid 
     |> Map.forall(fun _ v -> Option.isSome v)
 
-
 let range = Set [1..9]
 let onlyPossibleNumber eliminated =
     eliminated 
@@ -56,7 +67,7 @@ let onlyPossibleNumber eliminated =
     |> Set.toList
     |> List.head
 
-let reduceGrid (grid:Grid) reducer =
+let reduceGrid reducer (grid:Grid) =
     Seq.unfold(fun (curr, prev) ->
         if curr = prev then None
         else 
@@ -103,15 +114,33 @@ let sweep (grid:Grid) =
     let gridEliminatedNumbers =
         nineGrids
         |> List.map(fun g ->
-            g
-            |> List.map (fun k -> 
-                grid |> Map.find k
-            )
-        )
+            let valuesInGrid = g |> List.map (fun k -> (k, grid |> Map.find k))
 
-    crossEliminatedNumbers
+            let filledNumbers = 
+                valuesInGrid 
+                |> List.filter (snd >> Option.isSome)
+                |> List.map (fun (position,value) -> value |> Option.get)
+                |> Set.ofList
+
+            let unfilledPositions = 
+                valuesInGrid
+                |> List.filter (snd >> Option.isNone)
+                |> List.map fst
+
+            unfilledPositions
+            |> List.map (fun p -> (p, filledNumbers))
+        )
+        |> List.concat
+        |> Map.ofList
+
+    crossEliminatedNumbers 
+    |> Map.union gridEliminatedNumbers Set.union
     |> Map.filter(fun k v -> v.Count = 8)
     |> Map.fold(fun acc k v ->
         acc
         |> Map.add k (Some(v |> onlyPossibleNumber))
     ) grid
+
+let doIt g =
+    getCoordinates g
+    |> reduceGrid sweep
