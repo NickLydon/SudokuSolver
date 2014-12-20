@@ -1,31 +1,26 @@
 ﻿module SudokuSolver
 
-module Map =
-
-    let union map1 combine map2 =
-        map1 
-        |> Map.fold (fun acc k v ->
-            let newVal = 
-                match (acc |> Map.tryFind k) with
-                | None -> v
-                | Some v' -> combine v v'
-            acc |> Map.add k newVal
-        ) map2
+open Extensions
 
 type Grid = Map<(int*int),int option>
 
 let grid =
     [
-        [ None;   None;    Some 6;None;   None;   Some 4; None;   Some 8; Some 1 ]
-        [ None;   Some 8;  None;  None;   None;   Some 5; Some 2; None;   None   ]
-        [ None;   None;    Some 9;Some 7; None;   None;   Some 4; None;   None   ]
-        [ Some 8; Some 1;  None;  None;   None;   None;   None;   None;   None   ]
-        [ None;   None;    Some 2;None;   Some 7; None;   Some 6; None;   None   ]
-        [ None;   None;    None;  None;   None;   None;   None;   Some 7; Some 4 ]
-        [ None;   None;    Some 5;None;   None;   Some 2; Some 7; None;   None   ]
-        [ None;   None;    Some 1;Some 9; None;   None;   None;   Some 2; None   ]
-        [ Some 2; Some 7;  None;  Some 6; None;   None;   Some 3; None;   None   ]
+        ['1';'4';'2';' ';'6';'9';' ';' ';'8']
+        ['3';' ';' ';' ';' ';' ';' ';'9';' ']
+        [' ';' ';'7';' ';' ';' ';' ';'4';'5']
+        ['2';' ';'5';'7';'3';' ';' ';' ';' ']
+        [' ';' ';'1';'6';' ';'2';'5';' ';' ']
+        [' ';' ';' ';' ';'5';'4';'2';' ';'3']
+        ['5';'9';' ';' ';' ';' ';'7';' ';' ']
+        [' ';'2';' ';' ';' ';' ';' ';' ';'1']
+        ['8';' ';' ';'2';'7';' ';'9';'3';'4']
     ]
+    |> List.map (List.map
+        (function 
+        | ' ' -> None 
+        | a -> Some(int (string a)))
+    )
 
 let getCoordinates grid =
     grid 

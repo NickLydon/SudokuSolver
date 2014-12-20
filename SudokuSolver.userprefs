@@ -1,15 +1,15 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="SudokuSolver/Core.fs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="SudokuSolver/Test.fs">
     <Files>
-      <File FileName="SudokuSolver/Core.fs" Line="88" Column="88" />
+      <File FileName="SudokuSolver/Test.fs" Line="9" Column="9" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
         <State expanded="True">
           <Node name="SudokuSolver" expanded="True">
             <Node name="References" expanded="True" />
-            <Node name="Core.fs" selected="True" />
+            <Node name="Test.fs" selected="True" />
           </Node>
         </State>
       </Pad>
