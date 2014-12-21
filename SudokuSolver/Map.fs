@@ -1,4 +1,4 @@
-﻿namespace Extensions
+﻿namespace SudokuSolver
 
 module Map =
 
