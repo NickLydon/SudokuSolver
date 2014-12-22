@@ -2,6 +2,7 @@
 
 open NUnit.Framework
 open SudokuSolver
+open HtmlAgilityPack
 
 type CoreTests() = 
 
@@ -12,6 +13,22 @@ type CoreTests() =
             | ' ' -> None 
             | a -> Some(int (string a)))
         )
+
+    let loadTestGrid fileName = 
+        let htmlDoc = new HtmlDocument()
+        htmlDoc.LoadHtml(
+            System.IO.File.ReadAllText(fileName))
+        htmlDoc.DocumentNode.FirstChild.ChildNodes
+        |> Seq.map(fun n ->
+            n.ChildNodes
+            |> Seq.map(fun n -> 
+                match n.FirstChild.Attributes.["value"] with
+                | null -> None
+                | v -> Some(System.Int32.Parse v.Value)
+            )
+            |> Seq.toList
+        )
+        |> Seq.toList
 
     [<Test>]
     member this.``should give co-ordinates for empty grid with No(ne) values``() =
@@ -82,34 +99,23 @@ type CoreTests() =
 
     [<Test>]
     member x.``should solve easy puzzles``() =
-        let testGridEasy =
-            [
-                ['1';'4';'2';' ';'6';'9';' ';' ';'8']
-                ['3';' ';' ';' ';' ';' ';' ';'9';' ']
-                [' ';' ';'7';' ';' ';' ';' ';'4';'5']
-                ['2';' ';'5';'7';'3';' ';' ';' ';' ']
-                [' ';' ';'1';'6';' ';'2';'5';' ';' ']
-                [' ';' ';' ';' ';'5';'4';'2';' ';'3']
-                ['5';'9';' ';' ';' ';' ';'7';' ';' ']
-                [' ';'2';' ';' ';' ';' ';' ';' ';'1']
-                ['8';' ';' ';'2';'7';' ';'9';'3';'4']
-            ]
         let actual = 
-            testGridEasy
-            |> parseTestGrid
+            loadTestGrid "Easy.html"
             |> Solver.doIt
+
+        actual |> Solver.printGrid 9
 
         let expected =
             [
-                ['1'; '4'; '2'; '5'; '6'; '9'; '3'; '7'; '8']
-                ['3'; '5'; '8'; '4'; '1'; '7'; '6'; '9'; '2']
-                ['9'; '6'; '7'; '3'; '2'; '8'; '1'; '4'; '5']
-                ['2'; '8'; '5'; '7'; '3'; '1'; '4'; '6'; '9']
-                ['4'; '3'; '1'; '6'; '9'; '2'; '5'; '8'; '7']
-                ['6'; '7'; '9'; '8'; '5'; '4'; '2'; '1'; '3']
-                ['5'; '9'; '4'; '1'; '8'; '3'; '7'; '2'; '6']
-                ['7'; '2'; '3'; '9'; '4'; '6'; '8'; '5'; '1']
-                ['8'; '1'; '6'; '2'; '7'; '5'; '9'; '3'; '4']
+                ['5'; '9'; '8'; '3'; '4'; '7'; '2'; '1'; '6']
+                ['6'; '1'; '4'; '2'; '5'; '8'; '9'; '7'; '3']
+                ['3'; '2'; '7'; '1'; '6'; '9'; '8'; '5'; '4']
+                ['2'; '4'; '5'; '9'; '8'; '1'; '6'; '3'; '7']
+                ['7'; '8'; '6'; '4'; '3'; '5'; '1'; '2'; '9']
+                ['1'; '3'; '9'; '7'; '2'; '6'; '5'; '4'; '8']
+                ['9'; '7'; '2'; '8'; '1'; '3'; '4'; '6'; '5']
+                ['8'; '5'; '1'; '6'; '7'; '4'; '3'; '9'; '2']
+                ['4'; '6'; '3'; '5'; '9'; '2'; '7'; '8'; '1']
             ]
             |> parseTestGrid
             |> Solver.getCoordinates

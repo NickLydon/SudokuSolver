@@ -70,7 +70,19 @@ module Solver =
         )
 
     let sweep (grid:Grid) =
-        let (unpop, _) = getPopulated grid
+        let (unpop, pop) = getPopulated grid
+
+        let knownNumbers =
+            pop
+            |> List.map(fun (k, v) ->
+                v
+                |> Option.get
+                |> Set.singleton
+                |> Set.difference ([1..9] |> Set.ofList)
+                |> Set.toList
+                |> List.map(fun v -> (k,v))
+            )
+            |> List.concat
 
         let crossEliminatedNumbers =
             unpop
@@ -88,6 +100,7 @@ module Solver =
                 |> List.map(fun (a,b) -> (a, Option.get b))
             )
             |> List.concat
+            |> List.append knownNumbers
             |> List.fold(fun acc (position,value) ->
                 match acc |> Map.tryFind position with
                 | Some(a) -> acc |> Map.add position (a |> Set.add value)
