@@ -1,4 +1,4 @@
 SudokuSolver
 ============
 
-Computation expression for handling and logging exceptions
+Pretty naive, but it works!
