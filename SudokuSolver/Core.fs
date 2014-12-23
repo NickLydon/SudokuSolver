@@ -9,7 +9,7 @@ module Solver =
             grid
             |> Map.toSeq
             |> Seq.sortBy (fst >> snd)
-            |> Seq.map (snd >> function | Some x -> string x |> char | None -> ' ')
+            |> Seq.map (snd >> function | Some x -> string x |> char | None -> '0')
 
         [for i in 0..len-1 do
             yield sorted |> Seq.skip (i*len) |> Seq.take len |> Seq.toList]
@@ -69,20 +69,49 @@ module Solver =
                     yield (x',y')]
         )
 
+    let populateSinglePossibleValues (grid:Grid) allEliminatedNumbers =
+        nineGrids 
+        |> List.map(fun g ->
+            let valuesInGrid = g |> List.map (fun k -> (k, grid |> Map.find k)) |> Map.ofList
+            let (unpop,pop) = getPopulated valuesInGrid
+
+            let eliminatedInGrid = 
+                unpop 
+                |> List.map fst 
+                |> List.map (fun k -> 
+                    (k, allEliminatedNumbers |> Map.tryFind k |> function None -> Set.empty | Some s -> s)
+                )
+
+            let eliminatedForAllButOne = 
+                eliminatedInGrid 
+                |> List.map (snd >> Set.toList)
+                |> List.concat
+                |> Seq.groupBy id
+                |> Seq.filter (fun (k, group) ->
+                    group |> Seq.length = ((unpop |> List.length) - 1)
+                )
+                |> Seq.map fst
+            
+            eliminatedForAllButOne
+            |> Seq.map(fun s ->
+                (
+                    eliminatedInGrid 
+                    |> List.find (fun l -> 
+                        snd l
+                        |> Set.contains s
+                        |> not
+                    )
+                    |> fst,
+                    s |> Set.singleton |> Set.difference (Set([1..9]))
+                )
+            )
+            |> Seq.toList
+        )
+        |> List.concat
+        |> Map.ofList
+
     let sweep (grid:Grid) =
         let (unpop, pop) = getPopulated grid
-
-        let knownNumbers =
-            pop
-            |> List.map(fun (k, v) ->
-                v
-                |> Option.get
-                |> Set.singleton
-                |> Set.difference ([1..9] |> Set.ofList)
-                |> Set.toList
-                |> List.map(fun v -> (k,v))
-            )
-            |> List.concat
 
         let crossEliminatedNumbers =
             unpop
@@ -92,7 +121,7 @@ module Solver =
                     let xs = eightContiguousCells (fun x' -> (x',y))
                     let ys = eightContiguousCells (fun y' -> (x,y'))
                     xs |> List.append ys
-                    |> List.filter(fun p -> p <> (x,y))
+                    |> List.filter ((<>) (x,y))
 
                 cross
                 |> List.map(fun p -> ((x,y), grid |> Map.find p))
@@ -100,7 +129,6 @@ module Solver =
                 |> List.map(fun (a,b) -> (a, Option.get b))
             )
             |> List.concat
-            |> List.append knownNumbers
             |> List.fold(fun acc (position,value) ->
                 match acc |> Map.tryFind position with
                 | Some(a) -> acc |> Map.add position (a |> Set.add value)
@@ -129,8 +157,17 @@ module Solver =
             |> List.concat
             |> Map.ofList
 
-        crossEliminatedNumbers 
-        |> Map.union gridEliminatedNumbers Set.union
+        let allEliminatedNumbers =
+            crossEliminatedNumbers 
+            |> Map.union gridEliminatedNumbers Set.union
+                    
+        let allEliminatedNumbers =
+            allEliminatedNumbers
+            |> Map.union (populateSinglePossibleValues grid allEliminatedNumbers) Set.union
+
+        allEliminatedNumbers |> Map.tryFind (3,3) |> Option.map (printfn "%A") |> ignore
+
+        allEliminatedNumbers
         |> Map.filter(fun k v -> v.Count = 8)
         |> Map.fold(fun acc k v ->
             acc
