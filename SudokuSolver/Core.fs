@@ -165,8 +165,6 @@ module Solver =
             allEliminatedNumbers
             |> Map.union (populateSinglePossibleValues grid allEliminatedNumbers) Set.union
 
-        allEliminatedNumbers |> Map.tryFind (3,3) |> Option.map (printfn "%A") |> ignore
-
         allEliminatedNumbers
         |> Map.filter(fun k v -> v.Count = 8)
         |> Map.fold(fun acc k v ->

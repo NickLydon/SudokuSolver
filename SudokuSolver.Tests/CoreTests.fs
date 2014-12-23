@@ -142,3 +142,29 @@ type CoreTests() =
             |> Solver.getCoordinates
 
         Assert.That(actual, Is.EqualTo(expected))
+
+
+    [<Test>]
+    member x.``should solve hard puzzles``() =
+        let actual = 
+            loadTestGrid "Hard.html"
+            |> Solver.doIt
+
+        actual |> Solver.printGrid 9
+
+        let expected =
+            [
+                ['4'; '9'; '5'; '6'; '3'; '2'; '8'; '7'; '1']
+                ['6'; '1'; '7'; '9'; '5'; '8'; '4'; '2'; '3']
+                ['2'; '8'; '3'; '1'; '7'; '4'; '9'; '6'; '5']
+                ['7'; '3'; '6'; '4'; '2'; '1'; '5'; '9'; '8']
+                ['8'; '2'; '4'; '5'; '6'; '9'; '1'; '3'; '7']
+                ['9'; '5'; '1'; '7'; '8'; '3'; '2'; '4'; '6']
+                ['3'; '4'; '9'; '8'; '1'; '6'; '7'; '5'; '2']
+                ['5'; '6'; '8'; '2'; '9'; '7'; '3'; '1'; '4']
+                ['1'; '7'; '2'; '3'; '4'; '5'; '6'; '8'; '9']
+            ]
+            |> parseTestGrid
+            |> Solver.getCoordinates
+
+        Assert.That(actual, Is.EqualTo(expected))
